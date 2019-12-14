@@ -24,6 +24,19 @@ class PerlinTestCase(unittest.TestCase):
         self.assertNotEqual(pnoise1(0.5), pnoise1(0.5, base=5))
         self.assertNotEqual(pnoise1(0.5, base=5), pnoise1(0.5, base=1))
 
+    def test_perlin_1d_base_array(self):
+        from vec_noise._perlin import noisearr1
+        import numpy as np
+        from random import randint
+        size = 100
+        noise_map = np.zeros(size)
+
+        offset_x = randint(0, 10000)
+        for i in range(size):
+            noise_map[i] = pnoise1(offset_x + i)
+        
+        self.assertTrue(np.allclose(noise_map, noisearr1(offset_x, size, size)))
+
     def test_perlin_2d_range(self):
         from vec_noise import pnoise2
         for i in range(-10000, 10000):
@@ -41,6 +54,22 @@ class PerlinTestCase(unittest.TestCase):
                 n = pnoise2(x, y, octaves=o + 1)
                 self.assertTrue(-1.0 <= n <= 1.0, (x, n))
 
+    def test_perlin_2d_base_array(self):
+        from vec_noise._perlin import noisearr2
+        import numpy as np
+        from random import randint
+        size = (100, 100)
+        noise_map = np.zeros(size)
+
+        offset_x, offset_y = randint(0, 10000), randint(0, 10000)
+
+        for i in range(size[0]):
+            i1 = i + offset_x
+            for j in range(size[1]):
+                noise_map[i][j] = pnoise2(i1, j + offset_y)
+        
+        self.assertTrue(np.allclose(noise_map, noisearr2(offset_x, offset_y, size[0], size[1], size[0], size[1])))
+        
     def test_perlin_2d_base(self):
         from vec_noise import pnoise2
         x, y = 0.73, 0.27
