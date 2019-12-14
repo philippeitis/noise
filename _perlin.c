@@ -78,6 +78,62 @@ py_noise1(PyObject *self, PyObject *args, PyObject *kwargs)
     }
 }
 
+static PyObject *
+py_arr_noise1(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+	float x;
+	int x_size;
+	float x_res;
+	int octaves = 1;
+	float persistence = 0.5f;
+    float lacunarity = 2.0f;
+	int repeat = 1024; // arbitrary
+	int base = 0;
+
+	static char *kwlist[] = {"x", "x_size", "x_res", "octaves", "persistence", "lacunarity", "repeat", "base", NULL};
+
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "fif|iffii:noise1", kwlist,
+		&x, &x_size, &x_res, &octaves, &persistence, &lacunarity, &repeat, &base))
+		return NULL;
+
+    if (octaves <= 0) {
+        PyErr_SetString(PyExc_ValueError, "Expected octaves value > 0");
+		return NULL;
+    }
+
+    npy_intp dims[1] = { x_size };
+    PyObject *ret = PyArray_SimpleNew(1, dims, NPY_FLOAT);
+    if (ret == NULL)
+        return NULL;
+    float *data = (float *) PyArray_DATA(ret);
+
+	if (octaves == 1) {
+        // Single octave, return simple noise
+        for (int i = 0; i < x_res; i++) {
+	            data[i] = noise1(x + i/x_res, repeat, base);
+        }
+		return ret;
+	} else if (octaves > 1) {
+        for (int i = 0; i < x_res; i++) {
+            int j;
+            float freq = 1.0f;
+            float amp = 1.0f;
+            float max = 0.0f;
+            float total = 0.0f;
+            float loop_x = x + i/x_res;
+            for (j = 0; j < octaves; j++) {
+                total += noise1(loop_x * freq, (const int)(repeat * freq), base) * amp;
+                max += amp;
+                freq *= lacunarity;
+                amp *= persistence;
+            }
+
+            data[i] = total/max;
+        }
+		return ret;
+	}
+}
+
 float inline
 grad2(const int hash, const float x, const float y)
 {
@@ -154,6 +210,76 @@ py_noise2(PyObject *self, PyObject *args, PyObject *kwargs)
         PyErr_SetString(PyExc_ValueError, "Expected octaves value > 0");
         return NULL;
     }
+}
+
+static PyObject *
+py_arr_noise2(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+	float x, y;
+	int octaves = 1;
+	float persistence = 0.5f;
+    float lacunarity = 2.0f;
+	float repeatx = 1024; // arbitrary
+	float repeaty = 1024; // arbitrary
+	int width = 1;
+	int height = 1;
+	// Area to cover.
+	float x_res = 1.0;
+	float y_res = 1.0;
+	int base = 0;
+
+	static char *kwlist[] = {"x", "y", "width", "height", "x_res", "y_res" "octaves", "persistence", "lacunarity",
+	                        "repeatx", "repeaty", "base", NULL};
+
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "ff|iiffiffffi:noise2", kwlist,
+		&x, &y, &width, &height, &x_res, &y_res, &octaves, &persistence, &lacunarity, &repeatx, &repeaty, &base))
+		return NULL;
+
+    if (octaves <= 0) {
+        PyErr_SetString(PyExc_ValueError, "Expected octaves value > 0");
+		return NULL;
+    }
+
+    npy_intp dims[2] = { width, height };
+    PyObject *ret = PyArray_SimpleNew(2, dims, NPY_FLOAT);
+    if (ret == NULL)
+        return NULL;
+    float *data = (float *) PyArray_DATA(ret);
+
+	if (octaves == 1) {
+        // Single octave, return simple noise
+	    for (int i = 0; i < height; i++) {
+	        // Iterate over each row.
+	        int rowIndex = width * i;
+	        for (int j = 0; j < width; j++) {
+	            data[rowIndex + j] = noise2(x + j/x_res, y + i/y_res, repeatx, repeaty, base);
+	        }
+	    }
+		return ret;
+	} else if (octaves > 1) {
+        for (int i = 0; i < height; i++) {
+	        // Iterate over each row.
+	        int rowIndex = width * i;
+	        for (int j = 0; j < width; j++) {
+                int k;
+                float freq = 1.0;
+                float amp = 1.0;
+                float max = 0.0;
+                float total = 0.0;
+                float loop_x = x + j/x_res;
+                float loop_y = y + i/y_res;
+                for (k = 0; k < octaves; k++) {
+                    total += noise2(loop_x * freq, loop_y * freq, repeatx * freq, repeaty * freq, base) * amp;
+                    max += amp;
+                    freq *= lacunarity;
+                    amp *= persistence;
+                }
+
+	            data[rowIndex + j] = total / max;
+	        }
+	    }
+		return ret;
+	}
 }
 
 float inline
@@ -248,13 +374,102 @@ py_noise3(PyObject *self, PyObject *args, PyObject *kwargs)
     }
 }
 
+static PyObject *
+py_arr_noise3(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+	float x, y, z;
+	int octaves = 1;
+	float persistence = 0.5f;
+    float lacunarity = 2.0f;
+	float repeatx = 1024; // arbitrary
+	float repeaty = 1024; // arbitrary
+    float repeatz = 1024; // arbitrary
+	int x_size = 1;
+	int y_size = 1;
+	int z_size = 1;
+	// Area to cover.
+	float x_res = 1.0;
+	float y_res = 1.0;
+	float z_res = 1.0;
+	int base = 0;
+
+	static char *kwlist[] = {"x", "y", "z", "x_size", "y_size", "z_size", "x_res", "y_res", "z_res", "octaves",
+	                        "persistence", "lacunarity", "repeatx", "repeaty", "base", NULL};
+
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "fffiiifff|iffiiii:noise3", kwlist,
+		&x, &y, &z, &x_size, &y_size, &z_size, &x_res, &y_res, &z_res, &octaves, &persistence, &lacunarity, &repeatx,
+		 &repeaty, &repeatz, &base))
+		return NULL;
+
+    if (octaves <= 0) {
+        PyErr_SetString(PyExc_ValueError, "Expected octaves value > 0");
+		return NULL;
+    }
+
+    npy_intp dims[3] = { x_size, y_size, z_size };
+    PyObject *ret = PyArray_SimpleNew(3, dims, NPY_FLOAT);
+
+    if (ret == NULL)
+        return NULL;
+
+    float *data = (float *) PyArray_DATA(ret);
+
+	if (octaves == 1) {
+	    for (int i = 0; i < z_size; i++) {
+	        // Iterate over each row.
+	        int planeIndex = x_size * y_size * i;
+	        for (int j = 0; j < y_size; j++) {
+                int rowIndex = y_size * j;
+                for (int k = 0; k < z_size; k++) {
+                    data[planeIndex + rowIndex + k] = noise3(x + k/x_res, y + j/y_res, z + i/z_res,
+                                                            repeatx, repeaty, repeatz, base);
+                }
+	        }
+	    }
+		return ret;
+	} else if (octaves > 1) {
+        for (int i = 0; i < z_size; i++) {
+	        // Iterate over each row.
+	        int planeIndex = x_size * y_size * i;
+	        for (int j = 0; j < y_size; j++) {
+                int rowIndex = y_size * j;
+                for (int k = 0; k < z_size; k++) {
+                    int m;
+                    float freq = 1.0f;
+                    float amp = 1.0f;
+                    float max = 0.0f;
+                    float total = 0.0f;
+                    int loop_x = x + k/x_res;
+                    int loop_y = y + j/y_res;
+                    int loop_z = z + i/z_res;
+                    for (m = 0; m < octaves; m++) {
+                        total += noise3(loop_x * freq, loop_y * freq, loop_z * freq,
+                            (const int)(repeatx*freq), (const int)(repeaty*freq), (const int)(repeatz*freq), base) * amp;
+                        max += amp;
+                        freq *= lacunarity;
+                        amp *= persistence;
+                    }
+                    data[planeIndex + rowIndex + k] = total / max;
+                }
+	        }
+	    }
+		return ret;
+	}
+}
+
 static PyMethodDef perlin_functions[] = {
     {"noise1", (PyCFunction) py_noise1, METH_VARARGS | METH_KEYWORDS,
         "noise1(x, octaves=1, persistence=0.5, lacunarity=2.0, repeat=1024, base=0.0)\n\n"
         "1 dimensional perlin improved noise function (see noise3 for more info)"},
+    {"noisearr1", (PyCFunction) py_arr_noise1, METH_VARARGS | METH_KEYWORDS,
+        "noise1(x, x_size, x_res, octaves=1, persistence=0.5, lacunarity=2.0, repeat=1024, base=0.0)\n\n"
+        "1 dimensional perlin improved noise function (see noisearr3 for more info)"},
     {"noise2", (PyCFunction) py_noise2, METH_VARARGS | METH_KEYWORDS,
         "noise2(x, y, octaves=1, persistence=0.5, lacunarity=2.0, repeatx=1024, repeaty=1024, base=0.0)\n\n"
         "2 dimensional perlin improved noise function (see noise3 for more info)"},
+    {"noisearr2", (PyCFunction) py_arr_noise2, METH_VARARGS | METH_KEYWORDS,
+        "noise2(x, y, width, height, x_res, y_res, octaves=1, persistence=0.5, lacunarity=2.0, repeatx=1024, repeaty=1024, base=0.0)\n\n"
+        "2 dimensional perlin improved noise function (see noisearr3 for more info)"},
     {"noise3", (PyCFunction) py_noise3, METH_VARARGS | METH_KEYWORDS,
         "noise3(x, y, z, octaves=1, persistence=0.5, lacunarity=2.0, "
             "repeatx=1024, repeaty=1024, repeatz=1024, base=0.0)\n\n"
@@ -271,6 +486,25 @@ static PyMethodDef perlin_functions[] = {
         "tileable textures\n\n"
         "base -- specifies a fixed offset for the input coordinates. Useful for\n"
         "generating different noise textures with the same repeat interval"},
+    {"noisearr3", (PyCFunction) py_arr_noise3, METH_VARARGS | METH_KEYWORDS,
+        "noisearr3(x, y, z, x_size, y_size, z_size, x_res, y_res, z_res, octaves=1, persistence=0.5, lacunarity=2.0, "
+            "repeatx=1024, repeaty=1024, repeatz=1024, base=0.0)\n\n"
+        "return perlin \"improved\" noise value for specified coordinate\n\n"
+        "size -- number of elements along the given axis\n"
+        "res -- specifies the distance travelled along the given axis.\n"
+        "octaves -- specifies the number of passes for generating fBm noise,\n"
+        "defaults to 1 (simple noise).\n\n"
+        "persistence -- specifies the amplitude of each successive octave relative\n"
+        "to the one below it. Defaults to 0.5 (each higher octave's amplitude\n"
+        "is halved). Note the amplitude of the first pass is always 1.0.\n\n"
+        "lacunarity -- specifies the frequency of each successive octave relative\n"
+        "to the one below it, similar to persistence. Defaults to 2.0.\n\n"
+        "repeatx, repeaty, repeatz -- specifies the interval along each axis when \n"
+        "the noise values repeat. This can be used as the tile size for creating \n"
+        "tileable textures\n\n"
+        "base -- specifies a fixed offset for the input coordinates. Useful for\n"
+        "generating different noise textures with the same repeat interval"},
+
     {NULL}
 };
 
