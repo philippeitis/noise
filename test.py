@@ -28,6 +28,8 @@ class PerlinTestCase(unittest.TestCase):
         from vec_noise._perlin import noisearr1
         import numpy as np
         from random import randint
+        from vec_noise import pnoise1
+        
         size = 100
         noise_map = np.zeros(size)
 
@@ -58,6 +60,8 @@ class PerlinTestCase(unittest.TestCase):
         from vec_noise._perlin import noisearr2
         import numpy as np
         from random import randint
+        from vec_noise import pnoise2 
+    
         size = (100, 100)
         noise_map = np.zeros(size)
 
@@ -68,7 +72,7 @@ class PerlinTestCase(unittest.TestCase):
             for j in range(size[1]):
                 noise_map[i][j] = pnoise2(i1, j + offset_y)
         
-        self.assertTrue(np.allclose(noise_map, noisearr2(offset_x, offset_y, size[0], size[1], size[0], size[1])))
+        self.assertTrue(np.allclose(noise_map, noisearr2(offset_x, offset_y, size[0], size[1], 1, 1)))
         
     def test_perlin_2d_base(self):
         from vec_noise import pnoise2
