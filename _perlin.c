@@ -115,9 +115,9 @@ py_arr_noise1(PyObject *self, PyObject *args, PyObject *kwargs)
         for (int i = 0; i < x_res; i++) {
 	            data[i] = noise1(x + i/x_res, repeat, base);
         }
-		return ret;
-	} else if (octaves > 1) {
-        for (int i = 0; i < x_res; i++) {
+	return ret;
+	} else {
+	    for (int i = 0; i < x_res; i++) {
             int j;
             float freq = 1.0f;
             float amp = 1.0f;
@@ -259,7 +259,7 @@ py_arr_noise2(PyObject *self, PyObject *args, PyObject *kwargs)
 	        }
 	    }
 		return ret;
-	} else if (octaves > 1) {
+	} else {
         for (int i = 0; i < height; i++) {
 	        // Iterate over each row.
 	        int rowIndex = width * i;
@@ -430,7 +430,7 @@ py_arr_noise3(PyObject *self, PyObject *args, PyObject *kwargs)
 	        }
 	    }
 		return ret;
-	} else if (octaves > 1) {
+	} else {
         for (int i = 0; i < z_size; i++) {
 	        // Iterate over each row.
 	        int planeIndex = x_size * y_size * i;
