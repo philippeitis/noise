@@ -5,9 +5,12 @@
 // see LICENSE.txt for details
 
 #include "Python.h"
+#include "numpy/arrayobject.h"
 #include <math.h>
 #include <stdio.h>
 #include "_noise.h"
+
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
 #ifdef _MSC_VER
 #define inline __inline
@@ -527,6 +530,9 @@ static struct PyModuleDef moduledef = {
 PyObject *
 PyInit__perlin(void)
 {
+    if(PyArray_API == NULL)
+        import_array();
+
     return PyModule_Create(&moduledef);
 }
 
@@ -535,6 +541,9 @@ PyInit__perlin(void)
 void
 init_perlin(void)
 {
+    if(PyArray_API == NULL)
+        import_array();
+
     Py_InitModule3("_perlin", perlin_functions, module_doc);
 }
 
