@@ -8,7 +8,7 @@ Copyright (c) 2008, Casey Duncan (casey dot duncan at gmail dot com)
 Copyright (c) 2017, Zev Benjamin <zev@strangersgate.com>
 """
 
-__version__ = "1.1.4"
+__version__ = "1.1.5"
 
 from . import _perlin, _simplex
 
@@ -18,3 +18,7 @@ snoise4 = _simplex.noise4
 pnoise1 = _perlin.noise1
 pnoise2 = _perlin.noise2
 pnoise3 = _perlin.noise3
+
+pnoisearr1 = _perlin.noisearr1
+pnoisearr2 = _perlin.noisearr2
+pnoisearr3 = _perlin.noisearr3
